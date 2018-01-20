@@ -1,6 +1,6 @@
 package com.ocsoftware.teachertools
 
-import io.kotlintest.matchers.shouldEqual
+import io.kotlintest.matchers.shouldBe
 import io.kotlintest.specs.StringSpec
 
 class SeatingChartGeneratorTest : StringSpec() {
@@ -8,9 +8,12 @@ class SeatingChartGeneratorTest : StringSpec() {
     generateInput()
 
     "multiple award winners should be seated first" {
-      // TODO implement test
-      println("Hello")
-      1 shouldEqual 2
+      val orderBySeat = com.ocsoftware.teachertools.generateSeatingChart(ChartType.SEAT, ArrayList(), ArrayList())
+      val awards = orderBySeat.map { it.key }
+
+      awards[0].lastName shouldBe "Kirk"
+      awards[1].lastName shouldBe "Sulu"
+      awards[2].lastName shouldBe "Thames"
     }
 
     "only special services should be assigned to row A" {
@@ -23,6 +26,6 @@ class SeatingChartGeneratorTest : StringSpec() {
   }
 
   fun generateInput() {
-    // TODO
+    // TODO generate input
   }
 }
