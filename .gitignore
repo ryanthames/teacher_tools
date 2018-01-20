@@ -1,8 +1,8 @@
-src/main/resources/academic_awards.csv
-src/main/resources/school_community_awards.csv
-
 .gradle/
 build/
 target/
 .DS_Store
 .idea/
+
+src/test/resources/academic_awards.csv
+src/test/resources/school_community_awards.csv
