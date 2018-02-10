@@ -5,5 +5,6 @@ data class Award(
     val lastName: String,
     val category: String,
     val awardName: String,
+    val awardType: AwardType,
     val nhs: Boolean
 )
