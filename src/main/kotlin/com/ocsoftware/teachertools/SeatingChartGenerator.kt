@@ -12,9 +12,9 @@ fun main(args: Array<String>) {
   readCsvFile(awards, "Academic.csv", AwardType.ACADEMIC)
   readCsvFile(awards, "School.Community.csv", AwardType.SCHOOL_COMMUNITY)
 
-  println("TEST")
+  val seartingChart = generateSeatingChart(ChartType.SEAT, awards)
 
-  // TODO generate seating charts
+  println("DONE")
 }
 
 private fun readCsvFile(awards: ArrayList<Award>, fileName: String, awardType: AwardType) {
@@ -121,7 +121,14 @@ private fun generateAwardCount(awards: ArrayList<Award>): HashMap<String, Int> {
 
   awards.forEach {
     val name = "${it.firstName} ${it.lastName}"
-    awardCount[name] = awardCount.getOrPut(name, { 1 }) + 1
+    val ac: Int? = awardCount[name]
+
+    if(ac == null) {
+      awardCount[name] = 1
+    } else {
+      awardCount[name] = ac + 1
+    }
   }
+
   return awardCount
 }
