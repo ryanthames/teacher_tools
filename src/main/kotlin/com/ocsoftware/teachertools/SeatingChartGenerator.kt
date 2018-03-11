@@ -1,7 +1,63 @@
 package com.ocsoftware.teachertools
 
+import java.io.BufferedReader
+import java.io.FileReader
+import java.io.IOException
 import java.util.*
 import kotlin.collections.LinkedHashMap
+
+fun main(args: Array<String>) {
+  val awards = ArrayList<Award>()
+
+  readCsvFile(awards, "Academic.csv", AwardType.ACADEMIC)
+  readCsvFile(awards, "School.Community.csv", AwardType.SCHOOL_COMMUNITY)
+
+  println("TEST")
+
+  // TODO generate seating charts
+}
+
+private fun readCsvFile(awards: ArrayList<Award>, fileName: String, awardType: AwardType) {
+  var fileReader: BufferedReader? = null
+
+  try {
+    var line: String?
+
+    fileReader = BufferedReader(FileReader(fileName))
+
+    // ignore header
+    fileReader.readLine()
+
+    line = fileReader.readLine()
+    while (line != null) {
+      val tokens = line.split(",")
+      if (tokens.isNotEmpty()) {
+        val award = Award(
+            tokens[0],
+            tokens[1],
+            tokens[2],
+            tokens[3],
+            awardType,
+            tokens[4].toBoolean()
+        )
+
+        awards.add(award)
+      }
+
+      line = fileReader.readLine()
+    }
+  } catch (e: Exception) {
+    println("Reading CSV Error!")
+    e.printStackTrace()
+  } finally {
+    try {
+      fileReader!!.close()
+    } catch (e: IOException) {
+      println("Closing fileReader error")
+      e.printStackTrace()
+    }
+  }
+}
 
 // TODO Generate based on chart type
 // TODO REFACTOR!!

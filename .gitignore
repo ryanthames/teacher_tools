@@ -3,6 +3,10 @@ build/
 target/
 .DS_Store
 .idea/
+out/
 
 src/test/resources/academic_awards.csv
 src/test/resources/school_community_awards.csv
+
+Academic.csv
+School.Community.csv
