@@ -1,27 +1,9 @@
 package com.ocsoftware.teachertools;
 
 public class Award {
-  private String firstName;
-  private String lastName;
   private String category;
   private String awardName;
   private AwardType awardType;
-
-  public String getFirstName() {
-    return firstName;
-  }
-
-  public void setFirstName(String firstName) {
-    this.firstName = firstName;
-  }
-
-  public String getLastName() {
-    return lastName;
-  }
-
-  public void setLastName(String lastName) {
-    this.lastName = lastName;
-  }
 
   public String getCategory() {
     return category;
@@ -47,13 +29,8 @@ public class Award {
     this.awardType = awardType;
   }
 
-  public boolean isNhs() {
-    return nhs;
+  @Override
+  public String toString() {
+    return String.format("%s - %s", awardName, category);
   }
-
-  public void setNhs(boolean nhs) {
-    this.nhs = nhs;
-  }
-
-  private boolean nhs;
 }

@@ -1,5 +1,5 @@
 package com.ocsoftware.teachertools;
 
-public enum ChartType {
+public enum ChartOrder {
   SEAT, ALPHA;
 }
