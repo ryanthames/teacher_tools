@@ -19,8 +19,20 @@ public class SeatingChartGenerator {
   }
 
   private static void generateSeatingChart() {
-    // TODO: 3/18/18 get NHS students
-    // TODO: 3/18/18 get Special Services students
+    List<Person> ssStudents = people.stream().filter(Person::isSs).collect(Collectors.toList());
+    List<Person> nhsStudents = people.stream().filter(Person::isNhs).collect(Collectors.toList());
+    List<Person> remaningStudents = people.stream().filter(p -> !p.isSs() && !p.isNhs()).collect(Collectors.toList());
+
+    Map<Person, Integer> awardCount = generateAwardCountMap();
+
+    List<Person> multipleAwardWinners = remaningStudents.stream().filter(p -> awardCount.get(p) > 1).collect(Collectors.toList());
+    List<Person> singleAwardWinners = remaningStudents.stream().filter(p -> awardCount.get(p) == 1).collect(Collectors.toList());
+
+    // TODO: 3/18/18 handle teachers and blanks
+    // TODO: 3/18/18 handle sorting between different buckets of students
+    // TODO: 3/18/18 handle missing students
+
+    int x = 5;
   }
 
   private static void initSeatingChart() {
@@ -89,48 +101,19 @@ public class SeatingChartGenerator {
     }
   }
 
-//  private static Map<Award, String> generateSeatingChart(ChartOrder chartType, List<Award> awards) {
-//    Map<Award, String> seatingChart = new LinkedHashMap<>();
-//
-//    List<Award> nhsOfficerAwards = awards.stream().filter(Award::isNhs).collect(Collectors.toList());
-//    List<Award> ssAwards = awards.stream().filter(a -> "Special Services".equals(a.getCategory())).collect(Collectors.toList());
-//
-//    // TODO: 3/17/18 BAD BAD BAD...refactor
-//    List<Award> remainingAwards = awards.stream().filter(a -> !"Special Services".equals(a.getCategory()) && !a.isNhs()).collect(Collectors.toList());
-//
-//    Map<String, Integer> awardCount = generateAwardCountMap(awards);
-//
-//    List<Award> multipleAwardWinners = remainingAwards.stream().filter(a -> {
-//      String name = String.format("%s %s", a.getFirstName(), a.getLastName());
-//      return awardCount.getOrDefault(name, 0) > 1;
-//    }).collect(Collectors.toList());
-//
-//    List<Award> singleAwardWinners = remainingAwards.stream().filter(a -> {
-//      String name = String.format("%s %s", a.getFirstName(), a.getLastName());
-//      return awardCount.getOrDefault(name, 0) == 1;
-//    }).collect(Collectors.toList());
-//
-//    // TODO: 3/17/18 sort
-//
-//    // TODO: 3/17/18 assuming 15 seats per row for now....need to get the real numbers
-//
-//    return seatingChart;
-//  }
-//
-//  private static Map<String, Integer> generateAwardCountMap(List<Award> awards) {
-//    Map<String, Integer> awardCount = new HashMap<>();
-//
-//    awards.forEach(a -> {
-//      String name = String.format("%s %s", a.getFirstName(), a.getLastName());
-//      Integer count = awardCount.get(name);
-//
-//      if(count == null) {
-//        awardCount.put(name, 1);
-//      } else {
-//        awardCount.put(name, ++count);
-//      }
-//    });
-//
-//    return awardCount;
-//  }
+  private static Map<Person, Integer> generateAwardCountMap() {
+    Map<Person, Integer> awardCount = new HashMap<>();
+
+    awards.forEach((a, p) -> {
+      Integer count = awardCount.get(p);
+
+      if(count == null) {
+        awardCount.put(p, 1);
+      } else {
+        awardCount.put(p, ++count);
+      }
+    });
+
+    return awardCount;
+  }
 }
