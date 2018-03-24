@@ -1,5 +1,7 @@
 package com.ocsoftware.teachertools;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -33,16 +35,26 @@ public class SeatingChartGenerator {
   private static void generateSeatingChart() {
     List<Person> ssStudents = people.stream().filter(Person::isSs).collect(Collectors.toList());
     List<Person> nhsStudents = people.stream().filter(Person::isNhs).collect(Collectors.toList());
-    List<Person> remainingStudents = people.stream().filter(p -> !p.isSs() && !p.isNhs()).collect(Collectors.toList());
+
+    // filter out special cases (blanks, teachers, etc)
+    List<Person> specialCases = people.stream()
+        .filter(SeatingChartGenerator::isSpecialCase)
+        .collect(Collectors.toList());
+
+    List<Person> remainingStudents = people.stream().filter(p -> !p.isSs() && !p.isNhs() && !isSpecialCase(p))
+        .collect(Collectors.toList());
 
     Map<Person, Integer> awardCount = generateAwardCountMap();
 
-    List<Person> multipleAwardWinners = remainingStudents.stream().filter(p -> awardCount.get(p) > 1).collect(Collectors.toList());
-    List<Person> singleAwardWinners = remainingStudents.stream().filter(p -> awardCount.get(p) == 1).collect(Collectors.toList());
+    List<Person> multipleAwardWinners = remainingStudents.stream().filter(p -> awardCount.get(p) > 1)
+        .collect(Collectors.toList());
+    List<Person> singleAwardWinners = remainingStudents.stream().filter(p -> awardCount.get(p) == 1)
+        .collect(Collectors.toList());
 
     // assign ss and nhs students
     ssStudents.forEach(s -> seatingChart.put(s, new Seat("Row A", 0)));
     nhsStudents.forEach(s -> seatingChart.put(s, new Seat("Stage", 0)));
+    specialCases.forEach(s -> seatingChart.put(s, new Seat("Stage", 0)));
 
     multipleAwardWinners.sort(Comparator.comparing(Person::getLastName));
 
@@ -50,8 +62,12 @@ public class SeatingChartGenerator {
     singleAwardWinners.forEach(SeatingChartGenerator::assignSeat);
 
     // TODO: 3/18/18 handle sorting between different buckets of students
-    // TODO: 3/18/18 handle teachers and blanks
     // TODO: 3/18/18 handle missing students
+  }
+
+  private static boolean isSpecialCase(Person p) {
+    return (StringUtils.isBlank(p.getLastName()) || StringUtils.isBlank(p.getFirstName()))
+        || "None".equals(p.getFirstName());
   }
 
   private static void assignSeat(Person s) {
