@@ -10,11 +10,13 @@ public class SeatingChartGenerator {
   private static final Integer[] seats = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
   private static final String[] rows = {"B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"};
 
+  // TODO: 3/24/18 use actual dimensions of auditorium
+
   private static int currentSeatIndex = 0;
   private static int currentRowIndex = 0;
 
   private static final Map<Award, Person> awards = new LinkedHashMap<>();
-  private static final Map<Person, String> seatingChart = new LinkedHashMap<>();
+  private static final Map<Person, Seat> seatingChart = new LinkedHashMap<>();
   private static final Set<Person> people = new LinkedHashSet<>();
 
   public static void main(String... args) {
@@ -23,7 +25,9 @@ public class SeatingChartGenerator {
     generateSeatingChart();
     // TODO: 3/17/18 generating output based on criteria
 
-    seatingChart.forEach((p, s) -> System.out.println(String.format("%s | %s", p.toString(), s)));
+    seatingChart.entrySet().stream()
+        .sorted(Map.Entry.comparingByValue())
+        .forEach(System.out::println);
   }
 
   private static void generateSeatingChart() {
@@ -37,20 +41,22 @@ public class SeatingChartGenerator {
     List<Person> singleAwardWinners = remainingStudents.stream().filter(p -> awardCount.get(p) == 1).collect(Collectors.toList());
 
     // assign ss and nhs students
-    ssStudents.forEach(s -> seatingChart.put(s, "Row A"));
-    nhsStudents.forEach(s -> seatingChart.put(s, "Stage"));
+    ssStudents.forEach(s -> seatingChart.put(s, new Seat("Row A", 0)));
+    nhsStudents.forEach(s -> seatingChart.put(s, new Seat("Stage", 0)));
+
+    multipleAwardWinners.sort(Comparator.comparing(Person::getLastName));
 
     multipleAwardWinners.forEach(SeatingChartGenerator::assignSeat);
     singleAwardWinners.forEach(SeatingChartGenerator::assignSeat);
 
-    // TODO: 3/18/18 handle teachers and blanks
     // TODO: 3/18/18 handle sorting between different buckets of students
+    // TODO: 3/18/18 handle teachers and blanks
     // TODO: 3/18/18 handle missing students
   }
 
   private static void assignSeat(Person s) {
     validateIndex();
-    seatingChart.put(s, String.format("%s%d", rows[currentRowIndex], seats[currentSeatIndex]));
+    seatingChart.put(s, new Seat(rows[currentRowIndex], seats[currentSeatIndex]));
     currentSeatIndex++;
   }
 
@@ -66,7 +72,7 @@ public class SeatingChartGenerator {
   }
 
   private static void initSeatingChart() {
-    people.forEach(p -> seatingChart.put(p, "Unassigned"));
+    people.forEach(p -> seatingChart.put(p, new Seat("Unassigned", 0)));
   }
 
   private static void readDataFromFile() {
