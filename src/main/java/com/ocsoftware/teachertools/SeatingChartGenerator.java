@@ -2,9 +2,7 @@ package com.ocsoftware.teachertools;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,11 +23,41 @@ public class SeatingChartGenerator {
     readDataFromFile();
     initSeatingChart();
     generateSeatingChart();
-    // TODO: 3/17/18 generating output based on criteria
 
+    try {
+      generateOutputBySeat();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    // TODO: 4/8/18 order by called 
+    // TODO: 4/8/18 order by alphabetically
+
+    // TODO: 4/8/18 DEBUGGING - delete
+//    seatingChart.entrySet().stream()
+//        .sorted(Map.Entry.comparingByValue())
+//        .forEach(System.out::println);
+  }
+
+  private static void generateOutputBySeat() throws IOException {
+    Map<Person, Seat> chartOrderedBySeat = new LinkedHashMap<>();
     seatingChart.entrySet().stream()
         .sorted(Map.Entry.comparingByValue())
-        .forEach(System.out::println);
+        .forEachOrdered(x -> chartOrderedBySeat.put(x.getKey(), x.getValue()));
+
+    try(BufferedWriter writer = new BufferedWriter(new FileWriter("SeatingChartOrderBySeat.csv"))) {
+      chartOrderedBySeat.forEach((p, s) -> {
+        List<Award> studentAwards = new LinkedList<>();
+        awards.entrySet().stream().filter(e -> p.equals(e.getValue())).forEach(e -> studentAwards.add(e.getKey()));
+
+        for(Award sa : studentAwards) {
+          try {
+            writer.write(String.format("%s,%s,%s,%s\n", p.getFirstName(), p.getLastName(), sa.getCategory(), s));
+          } catch (IOException e) {
+            e.printStackTrace();
+          }
+        }
+      });
+    }
   }
 
   private static void generateSeatingChart() {
@@ -65,9 +93,10 @@ public class SeatingChartGenerator {
     // TODO: 3/18/18 handle missing students
   }
 
+  // method for handling one-off weirdness (aka blank names, teachers, etc)
   private static boolean isSpecialCase(Person p) {
     return (StringUtils.isBlank(p.getLastName()) || StringUtils.isBlank(p.getFirstName()))
-        || "None".equals(p.getFirstName());
+        || "None".equals(p.getFirstName()) || "Gillies".equals(p.getLastName());
   }
 
   private static void assignSeat(Person s) {
@@ -120,12 +149,12 @@ public class SeatingChartGenerator {
     Award award = new Award();
     Person person = new Person();
 
-    person.setFirstName(tokens[0]);
-    person.setLastName(tokens[1]);
-    award.setCategory(tokens[2]);
-    award.setAwardName(tokens[3]);
+    person.setFirstName(tokens[0].trim());
+    person.setLastName(tokens[1].trim());
+    award.setCategory(tokens[2].trim());
+    award.setAwardName(tokens[3].trim());
     award.setAwardType(awardType);
-    person.setNhs(Boolean.valueOf(tokens[4]));
+    person.setNhs(Boolean.valueOf(tokens[4].trim()));
 
     Person existingPerson = getPerson(person);
 
