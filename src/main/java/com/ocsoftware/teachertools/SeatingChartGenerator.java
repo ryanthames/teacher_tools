@@ -7,17 +7,42 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class SeatingChartGenerator {
-  private static final Integer[] seats = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-  private static final String[] rows = {"B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P"};
+  private static final String[] rows =
+      {"B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U"};
 
-  // TODO: 3/24/18 use actual dimensions of auditorium
+  private static final Map<String, Integer> rowLimits;
 
-  private static int currentSeatIndex = 0;
+  private static int currentSeat = 1;
   private static int currentRowIndex = 0;
 
   private static final Map<Award, Person> awards = new LinkedHashMap<>();
   private static final Map<Person, Seat> seatingChart = new LinkedHashMap<>();
   private static final Set<Person> people = new LinkedHashSet<>();
+
+  static {
+    rowLimits = new HashMap<>();
+
+    rowLimits.put("B", 9);
+    rowLimits.put("C", 9);
+    rowLimits.put("D", 10);
+    rowLimits.put("E", 10);
+    rowLimits.put("F", 10);
+    rowLimits.put("G", 11);
+    rowLimits.put("H", 11);
+    rowLimits.put("I", 11);
+    rowLimits.put("J", 12);
+    rowLimits.put("K", 12);
+    rowLimits.put("L", 13);
+    rowLimits.put("M", 13);
+    rowLimits.put("N", 13);
+    rowLimits.put("O", 14);
+    rowLimits.put("P", 14);
+    rowLimits.put("Q", 15);
+    rowLimits.put("R", 15);
+    rowLimits.put("S", 15);
+    rowLimits.put("T", 16);
+    rowLimits.put("U", 21);
+  }
 
   public static void main(String... args) {
     readDataFromFile();
@@ -26,16 +51,30 @@ public class SeatingChartGenerator {
 
     try {
       generateOutputBySeat();
+      generateOutputAlphabetically();
+      generateOutputByOrderCalled();
     } catch (IOException e) {
       e.printStackTrace();
     }
-    // TODO: 4/8/18 order by called 
-    // TODO: 4/8/18 order by alphabetically
 
     // TODO: 4/8/18 DEBUGGING - delete
 //    seatingChart.entrySet().stream()
 //        .sorted(Map.Entry.comparingByValue())
 //        .forEach(System.out::println);
+  }
+
+  private static void generateOutputByOrderCalled() {
+    // TODO: 4/26/18
+  }
+
+  private static void generateOutputAlphabetically() throws IOException {
+    try(BufferedWriter writer = new BufferedWriter(new FileWriter("SeatingChartAlphabetically.csv"))) {
+      List<Person> sortedPeeps = people.stream().sorted(Comparator.comparing(Person::getLastName)).collect(Collectors.toList());
+
+      for(Person p : sortedPeeps) {
+        writer.write(String.format("%s,%s,%s\n", p.getFirstName(), p.getLastName(), seatingChart.get(p)));
+      }
+    }
   }
 
   private static void generateOutputBySeat() throws IOException {
@@ -44,12 +83,12 @@ public class SeatingChartGenerator {
         .sorted(Map.Entry.comparingByValue())
         .forEachOrdered(x -> chartOrderedBySeat.put(x.getKey(), x.getValue()));
 
-    try(BufferedWriter writer = new BufferedWriter(new FileWriter("SeatingChartOrderBySeat.csv"))) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter("SeatingChartOrderBySeat.csv"))) {
       chartOrderedBySeat.forEach((p, s) -> {
         List<Award> studentAwards = new LinkedList<>();
         awards.entrySet().stream().filter(e -> p.equals(e.getValue())).forEach(e -> studentAwards.add(e.getKey()));
 
-        for(Award sa : studentAwards) {
+        for (Award sa : studentAwards) {
           try {
             writer.write(String.format("%s,%s,%s,%s\n", p.getFirstName(), p.getLastName(), sa.getCategory(), s));
           } catch (IOException e) {
@@ -88,32 +127,29 @@ public class SeatingChartGenerator {
 
     multipleAwardWinners.forEach(SeatingChartGenerator::assignSeat);
     singleAwardWinners.forEach(SeatingChartGenerator::assignSeat);
-
-    // TODO: 3/18/18 handle sorting between different buckets of students
-    // TODO: 3/18/18 handle missing students
   }
 
   // method for handling one-off weirdness (aka blank names, teachers, etc)
   private static boolean isSpecialCase(Person p) {
     return (StringUtils.isBlank(p.getLastName()) || StringUtils.isBlank(p.getFirstName()))
-        || "None".equals(p.getFirstName()) || "Gillies".equals(p.getLastName());
+        || "None".equals(p.getFirstName());
   }
 
   private static void assignSeat(Person s) {
     validateIndex();
-    seatingChart.put(s, new Seat(rows[currentRowIndex], seats[currentSeatIndex]));
-    currentSeatIndex++;
+    seatingChart.put(s, new Seat(rows[currentRowIndex], currentSeat));
+    currentSeat++;
   }
 
   private static void validateIndex() {
-    if (currentSeatIndex >= seats.length) {
+    if (currentSeat > rowLimits.get(rows[currentRowIndex])) {
       resetIndices();
     }
   }
 
   private static void resetIndices() {
     currentRowIndex++;
-    currentSeatIndex = 0;
+    currentSeat = 1;
   }
 
   private static void initSeatingChart() {
@@ -156,6 +192,8 @@ public class SeatingChartGenerator {
     award.setAwardType(awardType);
     person.setNhs(Boolean.valueOf(tokens[4].trim()));
 
+    boolean ss = Boolean.valueOf(tokens[5].trim().toLowerCase());
+
     Person existingPerson = getPerson(person);
 
     if (existingPerson != null) {
@@ -164,7 +202,7 @@ public class SeatingChartGenerator {
       people.add(person);
     }
 
-    if ("Special Services".equals(award.getCategory())) {
+    if (ss) {
       person.setSs(true);
     }
 
