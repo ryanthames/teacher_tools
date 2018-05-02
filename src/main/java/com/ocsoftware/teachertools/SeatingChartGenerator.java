@@ -19,6 +19,8 @@ public class SeatingChartGenerator {
   private static final Map<Person, Seat> seatingChart = new LinkedHashMap<>();
   private static final Set<Person> people = new LinkedHashSet<>();
 
+  private static final List<String> priorityCategories = new ArrayList<>();
+
   static {
     rowLimits = new HashMap<>();
 
@@ -46,6 +48,7 @@ public class SeatingChartGenerator {
 
   public static void main(String... args) {
     readDataFromFile();
+    markPriorityCategoryStudents();
     initSeatingChart();
     generateSeatingChart();
 
@@ -63,8 +66,64 @@ public class SeatingChartGenerator {
 //        .forEach(System.out::println);
   }
 
-  private static void generateOutputByOrderCalled() {
-    // TODO: 4/26/18
+  private static void markPriorityCategoryStudents() {
+    for(Map.Entry<Award, Person> e : awards.entrySet()) {
+      if (isSmallCategoryAward(e.getKey().getAwardName())) {
+        Person p = e.getValue();
+
+        for (Person p1 : people) {
+          if(p1.equals(p)) {
+            p1.setInPriorityCategory(true);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Simpre fidelis
+   * Boys and girls state
+   * * Outstanding *
+   * Principal's Leadership
+   * Hargrave award
+   * Community "Scholarships"
+   * Mr and Mrs CHS
+   */
+  private static boolean isSmallCategoryAward(String awardName) {
+    return awardName.equalsIgnoreCase("Simpre Fidelis")
+        || awardName.equalsIgnoreCase("Boys State Representative")
+        || awardName.equalsIgnoreCase("Girls State Representative")
+        || awardName.contains("Outstanding")
+        || awardName.equalsIgnoreCase("Principal's Leadership")
+        || awardName.contains("Hargrave")
+        || awardName.contains("Scholar")
+        || awardName.equalsIgnoreCase("Mr. CHS")
+        || awardName.equalsIgnoreCase("Miss CHS");
+  }
+
+  private static void populatePriorityCategories() {
+    Map<String, Integer> categoryCount = new HashMap<>();
+
+    for(Map.Entry<Award, Person> e : awards.entrySet()) {
+      String category = e.getKey().getCategory();
+      categoryCount.merge(category, 1, Integer::sum);
+    }
+
+    categoryCount.entrySet()
+        .stream()
+        .filter(e -> e.getValue() >= 1 && e.getValue() < 7)
+        .map(e -> e.getKey())
+        .forEach(priorityCategories::add);
+  }
+
+  private static void generateOutputByOrderCalled() throws IOException {
+    try(BufferedWriter writer = new BufferedWriter(new FileWriter("SeatingChartOrderCalled.csv"))) {
+      for(Map.Entry<Award, Person> e : awards.entrySet()) {
+        Seat s = seatingChart.get(e.getValue());
+        writer.write(String.format("%s,%s,%s,%s\n", e.getValue().getFirstName(), e.getValue().getLastName(),
+            e.getKey().getCategory(), s));
+      }
+    }
   }
 
   private static void generateOutputAlphabetically() throws IOException {
@@ -118,6 +177,9 @@ public class SeatingChartGenerator {
     List<Person> singleAwardWinners = remainingStudents.stream().filter(p -> awardCount.get(p) == 1)
         .collect(Collectors.toList());
 
+    List<Person> priorityCategoryWinners = singleAwardWinners.stream().filter(Person::isInPriorityCategory).collect(Collectors.toList());
+    List<Person> rest = singleAwardWinners.stream().filter(p -> !p.isInPriorityCategory()).collect(Collectors.toList());
+
     // assign ss and nhs students
     ssStudents.forEach(s -> seatingChart.put(s, new Seat("Row A", 0)));
     nhsStudents.forEach(s -> seatingChart.put(s, new Seat("Stage", 0)));
@@ -126,7 +188,8 @@ public class SeatingChartGenerator {
     multipleAwardWinners.sort(Comparator.comparing(Person::getLastName));
 
     multipleAwardWinners.forEach(SeatingChartGenerator::assignSeat);
-    singleAwardWinners.forEach(SeatingChartGenerator::assignSeat);
+    priorityCategoryWinners.forEach(SeatingChartGenerator::assignSeat);
+    rest.forEach(SeatingChartGenerator::assignSeat);
   }
 
   // method for handling one-off weirdness (aka blank names, teachers, etc)
@@ -190,9 +253,16 @@ public class SeatingChartGenerator {
     award.setCategory(tokens[2].trim());
     award.setAwardName(tokens[3].trim());
     award.setAwardType(awardType);
-    person.setNhs(Boolean.valueOf(tokens[4].trim()));
+    boolean ss = false;
+    boolean nhs = false;
 
-    boolean ss = Boolean.valueOf(tokens[5].trim().toLowerCase());
+    if (tokens.length > 4) {
+      nhs = StringUtils.isNotBlank(tokens[4]) ? Boolean.valueOf(tokens[4].trim()) : false;
+    }
+
+    if (tokens.length > 5) {
+      ss = StringUtils.isNotBlank(tokens[5]) ? Boolean.valueOf(tokens[5].trim().toLowerCase()) : false;
+    }
 
     Person existingPerson = getPerson(person);
 
@@ -204,6 +274,10 @@ public class SeatingChartGenerator {
 
     if (ss) {
       person.setSs(true);
+    }
+
+    if(nhs) {
+      person.setNhs(true);
     }
 
     awards.put(award, person);

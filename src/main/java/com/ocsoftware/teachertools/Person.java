@@ -6,6 +6,16 @@ public class Person {
   private boolean nhs;
   private boolean ss;
 
+  public boolean isInPriorityCategory() {
+    return inPriorityCategory;
+  }
+
+  public void setInPriorityCategory(boolean inPriorityCategory) {
+    this.inPriorityCategory = inPriorityCategory;
+  }
+
+  private boolean inPriorityCategory;
+
   public boolean isSs() {
     return ss;
   }
