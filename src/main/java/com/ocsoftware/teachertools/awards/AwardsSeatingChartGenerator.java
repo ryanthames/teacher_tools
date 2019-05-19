@@ -1,4 +1,4 @@
-package com.ocsoftware.teachertools;
+package com.ocsoftware.teachertools.awards;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -6,7 +6,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SeatingChartGenerator {
+public class AwardsSeatingChartGenerator {
   private static final String[] rows =
       {"B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U"};
 
@@ -164,7 +164,7 @@ public class SeatingChartGenerator {
 
     // filter out special cases (blanks, teachers, etc)
     List<Person> specialCases = people.stream()
-        .filter(SeatingChartGenerator::isSpecialCase)
+        .filter(AwardsSeatingChartGenerator::isSpecialCase)
         .collect(Collectors.toList());
 
     List<Person> remainingStudents = people.stream().filter(p -> !p.isSs() && !p.isNhs() && !isSpecialCase(p))
@@ -187,9 +187,9 @@ public class SeatingChartGenerator {
 
     multipleAwardWinners.sort(Comparator.comparing(Person::getLastName));
 
-    multipleAwardWinners.forEach(SeatingChartGenerator::assignSeat);
-    priorityCategoryWinners.forEach(SeatingChartGenerator::assignSeat);
-    rest.forEach(SeatingChartGenerator::assignSeat);
+    multipleAwardWinners.forEach(AwardsSeatingChartGenerator::assignSeat);
+    priorityCategoryWinners.forEach(AwardsSeatingChartGenerator::assignSeat);
+    rest.forEach(AwardsSeatingChartGenerator::assignSeat);
   }
 
   // method for handling one-off weirdness (aka blank names, teachers, etc)

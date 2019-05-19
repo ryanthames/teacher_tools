@@ -1,4 +1,4 @@
-package com.ocsoftware.teachertools;
+package com.ocsoftware.teachertools.awards;
 
 import java.util.Comparator;
 

@@ -1,4 +1,4 @@
-package com.ocsoftware.teachertools;
+package com.ocsoftware.teachertools.awards;
 
 public class Award {
   private String category;
